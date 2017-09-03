@@ -1,0 +1,65 @@
+#!/bin/sh
+
+script_root_dir=$(dirname $0)
+
+# requirements
+. "${script_root_dir}/vendor/ini-parser.sh"
+
+# TODO: get script paramters (for .gitconfig location - ~/.gitconfig by default)
+
+# read git config file
+config_file_location="${HOME}/.gitconfig"
+read_ini "${config_file_location}"
+
+# transform the ${INI__ALL_VARS} to an array if it begins with 'INI__emails'
+emails_array=()
+
+IFS=' ' ini_variables=(${INI__ALL_VARS})
+for variable in "${ini_variables[@]}"; do
+    # check if the variable begins with 'INI__user__emails__'
+    if [[ $variable == INI__emails__* ]]; then
+        emails_array+=("${variable:13}=${!variable}") # 13 indicates the start of the folder name
+    fi
+done
+
+if (( ${#emails_array[@]} == 0 )); then
+    # exit if no emails were found in the configuration
+    exit 0
+fi
+
+# get the current git config user.email
+current_name=$(git config --get user.name)
+current_email=$(git config --get user.email)
+
+# figure out which email address to use
+new_email=$current_email
+
+# loop forwards (ending at the current directory) and check if any parent folders match a folder/name in a config file
+for item in "${emails_array[@]}"; do
+    IFS='=' keyvalue=(${item})
+    folder_name=${keyvalue[0]}
+    email=${keyvalue[1]}
+
+    # break the current path string into an array
+    currentPath=$(pwd)
+    IFS='/' path_items=(${currentPath})
+    for i in ${path_items[@]}; do
+        if [[ $i == $folder_name ]]; then
+            new_email=$email
+            break 2
+        fi
+    done
+done
+
+if [[ $new_email != $current_email ]]; then    
+    echo "Current email (${current_email}) does not match intended email (${new_email})."
+    echo "Updating email to ${new_email}. Retrying..."
+
+    # update email for future commits
+    git config user.email "${new_email}"
+
+    # then amend the previous commit
+    git commit --amend --author="${current_name} <${new_email}>" --no-edit
+fi
+
+exit 0
