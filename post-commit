@@ -5,10 +5,16 @@ script_root_dir=$(dirname $0)
 # requirements
 . "${script_root_dir}/vendor/ini-parser.sh"
 
-# TODO: get script paramters (for .gitconfig location - ~/.gitconfig by default)
+# read `~/.gitconfig` or a custom config file (`~/.gitconfig` by default)
+custom_config_file_location=$1
+config_file_location=""
+if [[ $custom_config_file_location != "" ]]; then
+    config_file_location=$custom_config_file_location
+else
+    config_file_location="${HOME}/.gitconfig"
+fi
 
-# read git config file
-config_file_location="${HOME}/.gitconfig"
+# read config
 read_ini "${config_file_location}"
 
 # transform the ${INI__ALL_VARS} to an array if it begins with 'INI__emails'
