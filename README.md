@@ -56,4 +56,12 @@ TODO
 
 ## Tests
 
-TODO
+Run tests with [Docker](https://www.docker.com/community-edition)! Use `docker build -t git-multi-email-test . --no-cache --rm` to build the image, then `docker run --rm git-multi-email-test` to run the tests.
+
+Or, you can choose to run the tests without Docker by using `sh ./test/setup.sh`, then `sh ./test/test.sh`.
+
+Note: tests running on Travis CI use Docker.
+
+## License
+
+[MIT License](LICENSE)
