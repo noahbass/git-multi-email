@@ -1,0 +1,11 @@
+language: bash
+
+services:
+  - docker
+
+script:
+  - docker build -t git-multi-email-test . --no-cache --rm
+  - docker run --rm git-multi-email-test
+
+notifications:
+  email: false
